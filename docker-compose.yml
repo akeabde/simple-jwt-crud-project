@@ -1,0 +1,12 @@
+services:
+  # خدمة السيرفر فقط (بدون تحميل MongoDB)
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      # هنا كنستعملو host.docker.internal باش السيرفر فـ Docker يتصل بقاعدة البيانات اللي عندك فالحاسوب
+      - MONGO_URI=mongodb://host.docker.internal:27017/persons_crud_app
+      - JWT_SECRET=my_super_secret_key_12345
+    restart: unless-stopped

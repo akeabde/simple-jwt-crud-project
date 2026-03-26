@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<!-- 
+  هذه صفحة لوحة التحكم / This is the Dashboard page
+  تعرض قائمة الأشخاص وتسمح بالإضافة والتعديل والحذف
+  It shows the list of persons and allows adding, editing, and deleting
+-->
+
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900">
+
+  <!-- ===== شريط التنقل / Navigation Bar ===== -->
+  <nav class="bg-white/5 backdrop-blur-lg border-b border-white/10 px-6 py-4">
+    <div class="max-w-5xl mx-auto flex justify-between items-center">
+      <!-- اسم المستخدم / User name -->
+      <div class="text-white">
+        <span class="text-purple-300">Welcome,</span>
+        <span id="userName" class="font-bold text-lg ml-1"></span>
+      </div>
+      <!-- زر تسجيل الخروج / Logout button -->
+      <button
+        id="logoutBtn"
+        class="bg-red-500/20 hover:bg-red-500/40 text-red-300 hover:text-red-100 px-5 py-2 rounded-xl font-semibold transition-all border border-red-500/30"
+      >
+        🚪 Logout
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===== المحتوى الرئيسي / Main Content ===== -->
+  <div class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- عنوان + زر إضافة / Title + Add button -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <h1 class="text-3xl font-bold text-white">📋 Persons List</h1>
+      <button
+        id="addPersonBtn"
+        class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
+      >
+        ➕ Add Person
+      </button>
+    </div>
+
+    <!-- رسالة عندما لا يوجد أشخاص / Message when no persons -->
+    <div id="emptyMessage" class="hidden text-center py-16">
+      <p class="text-6xl mb-4">🤷</p>
+      <p class="text-purple-300 text-xl">No persons yet</p>
+      <p class="text-purple-400/60 text-sm mt-2">Click "Add Person" to start</p>
+    </div>
+
+    <!-- قائمة الأشخاص / Persons list container -->
+    <div id="personsList" class="grid gap-4"></div>
+  </div>
+
+  <!-- ===== نافذة الإضافة / التعديل (Modal) ===== -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg p-8">
+
+      <!-- عنوان النافذة / Modal title -->
+      <h2 id="modalTitle" class="text-2xl font-bold text-white mb-6"></h2>
+
+      <!-- الفورم / Form -->
+      <form id="personForm" class="space-y-4">
+
+        <!-- حقل مخفي لحفظ الـ ID عند التعديل / Hidden field to store ID when editing -->
+        <input type="hidden" id="personId">
+
+        <!-- الاسم الأول / First name -->
+        <div>
+          <label class="block text-purple-200 text-sm font-semibold mb-1">First Name (ism)</label>
+          <input
+            type="text" id="ism" required
+            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
+            placeholder="e.g. Ahmed"
+          >
+        </div>
+
+        <!-- اسم العائلة / Last name -->
+        <div>
+          <label class="block text-purple-200 text-sm font-semibold mb-1">Last Name (nasab)</label>
+          <input
+            type="text" id="nasab" required
+            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
+            placeholder="e.g. Alaoui"
+          >
+        </div>
+
+        <!-- العمر / Age -->
+        <div>
+          <label class="block text-purple-200 text-sm font-semibold mb-1">Age (l3omr)</label>
+          <input
+            type="number" id="l3omr" required min="1" max="150"
+            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
+            placeholder="e.g. 25"
+          >
+        </div>
+
+        <!-- الوصف / Description -->
+        <div>
+          <label class="block text-purple-200 text-sm font-semibold mb-1">Description</label>
+          <textarea
+            id="description" rows="3"
+            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-400 transition resize-none"
+            placeholder="Optional description..."
+          ></textarea>
+        </div>
+
+        <!-- أزرار / Buttons -->
+        <div class="flex gap-3 pt-2">
+          <button
+            type="submit"
+            class="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 rounded-xl transition-all"
+          >
+            💾 Save
+          </button>
+          <button
+            type="button" id="cancelBtn"
+            class="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-all border border-white/20"
+          >
+            ❌ Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== JavaScript ===== -->
+  <script>
+    // ==========================================
+    // المتغيرات العامة / Global variables
+    // ==========================================
+
+    // رابط الـ API / API URL
+    const API_URL = '/api/persons';
+
+    // أخذ التوكن من localStorage / Get token from localStorage
+    const token = localStorage.getItem('token');
+
+    // إذا لا يوجد توكن، أرسل المستخدم لصفحة الدخول / If no token, redirect to login
+    if (!token) {
+      window.location.href = 'index.html';
+    }
+
+    // عرض اسم المستخدم / Display user name
+    document.getElementById('userName').textContent = localStorage.getItem('userName') || 'User';
+
+    // ==========================================
+    // العناصر في الصفحة / Page elements
+    // ==========================================
+    const personsList = document.getElementById('personsList');
+    const emptyMessage = document.getElementById('emptyMessage');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const personForm = document.getElementById('personForm');
+    const addPersonBtn = document.getElementById('addPersonBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // ==========================================
+    // الدوال / Functions
+    // ==========================================
+
+    // --- دالة لجلب كل الأشخاص / Function to fetch all persons ---
+    async function loadPersons() {
+      try {
+        const response = await fetch(API_URL, {
+          headers: {
+            // إرسال التوكن مع الطلب / Send token with request
+            'Authorization': 'Bearer ' + token
+          }
+        });
+
+        // إذا التوكن غير صالح / If token is invalid
+        if (response.status === 401) {
+          alert('Session expired! Please log in again ⏱️');
+          localStorage.clear();
+          window.location.href = 'index.html';
+          return;
+        }
+
+        const persons = await response.json();
+
+        // إذا لا يوجد أشخاص / If no persons
+        if (persons.length === 0) {
+          personsList.innerHTML = '';
+          emptyMessage.classList.remove('hidden');
+          return;
+        }
+
+        // إخفاء رسالة "فارغ" / Hide empty message
+        emptyMessage.classList.add('hidden');
+
+        // بناء البطاقات / Build cards
+        personsList.innerHTML = persons.map(person => `
+          <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all group">
+            <div class="flex flex-col sm:flex-row justify-between gap-4">
+              <!-- معلومات الشخص / Person info -->
+              <div class="flex-1">
+                <h3 class="text-xl font-bold text-white mb-1">
+                  ${person.ism} ${person.nasab}
+                </h3>
+                <p class="text-purple-300 text-sm mb-2">
+                  🎂 Age: <span class="font-semibold text-white">${person.l3omr}</span>
+                </p>
+                ${person.description
+                  ? `<p class="text-purple-200/70 text-sm">${person.description}</p>`
+                  : ''
+                }
+              </div>
+              <!-- أزرار التعديل والحذف / Edit & Delete buttons -->
+              <div class="flex sm:flex-col gap-2">
+                <button
+                  onclick="editPerson('${person._id}', '${person.ism}', '${person.nasab}', ${person.l3omr}, \`${(person.description || '').replace(/`/g, '')}\`)"
+                  class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 hover:text-amber-100 px-4 py-2 rounded-xl text-sm font-semibold transition-all border border-amber-500/30"
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  onclick="deletePerson('${person._id}')"
+                  class="bg-red-500/20 hover:bg-red-500/40 text-red-300 hover:text-red-100 px-4 py-2 rounded-xl text-sm font-semibold transition-all border border-red-500/30"
+                >
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (error) {
+        console.error('Error fetching persons:', error);
+      }
+    }
+
+    // --- فتح نافذة الإضافة / Open add modal ---
+    addPersonBtn.addEventListener('click', () => {
+      modalTitle.textContent = '➕ Add New Person';
+      personForm.reset();
+      document.getElementById('personId').value = '';
+      modal.classList.remove('hidden');
+    });
+
+    // --- إغلاق النافذة / Close modal ---
+    cancelBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+
+    // إغلاق النافذة بالضغط على الخلفية / Close modal by clicking background
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+
+    // --- دالة التعديل / Edit function ---
+    function editPerson(id, ism, nasab, l3omr, description) {
+      modalTitle.textContent = '✏️ Edit Person';
+      document.getElementById('personId').value = id;
+      document.getElementById('ism').value = ism;
+      document.getElementById('nasab').value = nasab;
+      document.getElementById('l3omr').value = l3omr;
+      document.getElementById('description').value = description;
+      modal.classList.remove('hidden');
+    }
+
+    // --- حفظ (إضافة أو تعديل) / Save (add or update) ---
+    personForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // أخذ البيانات من الفورم / Get data from form
+      const personId = document.getElementById('personId').value;
+      const personData = {
+        ism: document.getElementById('ism').value,
+        nasab: document.getElementById('nasab').value,
+        l3omr: Number(document.getElementById('l3omr').value),
+        description: document.getElementById('description').value
+      };
+
+      try {
+        let response;
+
+        if (personId) {
+          // --- تعديل شخص موجود / Update existing person ---
+          response = await fetch(API_URL + '/' + personId, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(personData)
+          });
+        } else {
+          // --- إضافة شخص جديد / Add new person ---
+          response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(personData)
+          });
+        }
+
+        if (response.ok) {
+          modal.classList.add('hidden');
+          loadPersons();
+        } else if (response.status === 401) {
+          alert('Session expired! Please log in again ⏱️');
+          localStorage.clear();
+          window.location.href = 'index.html';
+        }
+
+      } catch (error) {
+        console.error('Save error:', error);
+      }
+    });
+
+    // --- دالة الحذف / Delete function ---
+    async function deletePerson(id) {
+      // تأكيد الحذف / Confirm deletion
+      const confirmed = confirm('Are you sure you want to delete this person?');
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch(API_URL + '/' + id, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+
+        if (response.ok) {
+          loadPersons();
+        } else if (response.status === 401) {
+          alert('Session expired during deletion! Please log in again ⏱️');
+          localStorage.clear();
+          window.location.href = 'index.html';
+        }
+
+      } catch (error) {
+        console.error('Delete error:', error);
+      }
+    }
+
+    // --- تسجيل الخروج / Logout ---
+    logoutBtn.addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    });
+
+    // ==========================================
+    // تحميل الأشخاص عند فتح الصفحة / Load persons when page opens
+    // ==========================================
+    loadPersons();
+  </script>
+
+</body>
+</html>
